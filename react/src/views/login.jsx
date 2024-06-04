@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import InputField from '../component/smallComponent/InputField';
 import PasswordInput from '../component/smallComponent/PasswordInput';
 import SocialLoginButtons from '../component/smallComponent/SocialLoginButton';
@@ -6,20 +6,20 @@ import SubmitButton from '../component/smallComponent/SubmitButton';
 import LoadingSpinner from '../component/smallComponent/LoadingSpinner';
 import { logo } from '../constants/Constant';
 import { toast, ToastContainer } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import 'react-toastify/dist/ReactToastify.css';
+import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import axiosClient from '../axios-client';
 
 function login() {
-    // const { login } = useAuth();
-    // const location = useLocation();
-    // const successMessage = location.state?.successMessage;
+    const location = useLocation();
+    const successMessage = location.state?.successMessage;
 
-    // useEffect(() => {
-    //     if (successMessage) {
-    //         toast.success(successMessage);
-    //     }
-    // }, [successMessage]);
+    useEffect(() => {
+        if (successMessage) {
+            toast.success(successMessage);
+        }
+    }, [successMessage]);
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -30,17 +30,18 @@ function login() {
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
-
+    
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = axiosClient.post('/login', {
+            const response = await axiosClient.post('/login', {
                 email: formData.email,
                 password: formData.password
             });
+            console.log(response);
             toast.success(response.data.message);
             setLoading(false);
 

@@ -6,16 +6,21 @@ import SocialLoginButtons from '../component/smallComponent/SocialLoginButton';
 import SubmitButton from '../component/smallComponent/SubmitButton';
 import { logo } from '../constants/Constant';
 import { ToastContainer, toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axiosClient from '../axios-client';
+import { UseStateContext } from '../contexts/ContextProvider';
+import 'react-toastify/dist/ReactToastify.css';
 
 function signup() {
+    const {setUser,setToken} = UseStateContext();
+
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
     });
     const [loading, setLoading] = useState(false);
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,11 +30,13 @@ function signup() {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/register', {
+            const response = await axiosClient.post('/signUp', {
                 name: formData.username,
                 email: formData.email,
                 password: formData.password
             });
+            setUser(response.data.user);
+            setToken(response.data.token);
             toast.success(response.data.message); // show success toast
             setLoading(false);
             setFormData({
@@ -37,17 +44,19 @@ function signup() {
                 email: '',
                 password: ''
             });
-            // navigate('/login', { state: { successMessage: response.data.message } }); // Pass success message as state
-        } catch (error) {
-            console.log("Error:", error); // Log the error object to the console
-            if (error.response && error.response.status === 422) {
+            navigate('/dashboard', { state: { successMessage: response.data.message } }); // Pass success message as state
+        } catch (errors) {
+            // console.log(response);
+            console.log("Error:", errors.response.data.errors); // Log the error object to the console
+            if (errors.response && errors.response.status === 422) {
                 // Handle validation errors returned by the API
-                const errors = error.response.data.errors;
+                const errorsM = errors.response.data.errors;
                 const validationErrors = {};
-                for (const key in errors) {
-                    toast.error(errors[key][0]);
+                for (const key in errorsM) {
+                    toast.error(errorsM[key][0]);
+                    console.log(errorsM[key][0]);
                 }
-                console.log("Validation Errors:", validationErrors); // Log validation errors to the console
+                // console.log("Validation Errors:", validationErrors); // Log validation errors to the console
             } else {
                 toast.error("An error occurred while registering the user");
             }
